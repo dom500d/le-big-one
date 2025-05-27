@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial.distance import hamming
 import random
 import grid_setting, main
+from collections import Counter
 
 class RaceType:
     pass
@@ -32,7 +33,7 @@ class IncomeGenerator:
     def get_counts(self, num_agents):
         ret = []
         for x in self.percentiles:
-            ret.append(x * num_agents)
+            ret.append(round(x * num_agents))
             
         return ret
     
@@ -43,7 +44,7 @@ class RaceGenerator:
     def get_counts(self, num_agents):
         ret = []
         for x in self.percentiles:
-            ret.append(x * num_agents)
+            ret.append(round(x * num_agents))
             
         return ret
     
@@ -70,15 +71,26 @@ class Environment:
         # Generate race/income distributions
         porportions = race.get_counts(self.num_agents)
         races = list(range(1, len(porportions) + 1))
-        race_list = [attr for attr, count in zip(races, porportions) for _ in range(self.num_agents)]
+        race_list = [attr for attr, count in zip(races, porportions) for _ in range(count)]
+        diff = self.num_agents-len(race_list)
+        race_list.extend([1] * diff)
+        random.shuffle(race_list)
         
+
         porportions = income.get_counts(self.num_agents)
         incomes = list(range(1, len(porportions) + 1))
-        income_list = [attr for attr, count in zip(incomes, porportions) for _ in range(self.num_agents)]
+        income_list = [attr for attr, count in zip(incomes, porportions) for _ in range(count)]
+        diff = self.num_agents-len(income_list)
+        income_list.extend([1] * diff)
+        random.shuffle(income_list)
+        
         
         agents_per_type = self.num_agents // len(attributes_list)
         listttt = [agents_per_type for _ in range(len(attributes_list))]
-        attr_list = [attr for attr, count in zip(attributes_list, listttt) for _ in range(self.num_agents)]
+        attr_list = [attr for attr, count in zip(attributes_list, listttt) for _ in range(count)]
+        diff = self.num_agents-len(attr_list)
+        attr_list.extend([(1, 1)] * diff)
+        random.shuffle(attr_list)
         
         for i in range(0, self.num_agents):
             pos = self.agent_positions.pop()
@@ -219,6 +231,7 @@ def simulate(height, width, population_density, num_attributes, income: IncomeGe
             grid_setting.plot_grid(env.grid, env.agents, num_attributes, iteration, segregation)
         unsatisfied = env.get_unsatisfied_agents(tau_u, tau_s)
         if not unsatisfied:
+            print("There are no unsatisfied agents.")
             break
         random.shuffle(unsatisfied)
         for agent in unsatisfied:

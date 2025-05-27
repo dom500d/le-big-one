@@ -29,9 +29,11 @@ def initialize_grid(num_agents, num_attributes):
     
     
     return grid, agents
-def plot_grid(grid, agents, num_attributes, iteration, segregation):
+def plot_grid(grid, agents, num_attributes, iteration, segregation, color_based_on='race'):
     """Plot the grid with color-coded agents."""
-    
+    color_race = {1: 'green', 2: 'yellow', 3: 'red', 4: 'blue'}
+    color_income = color_race
+
     # Colors for agent types
     COLORS_2 = { (1,1): 'green', (1,2): 'yellow', (2,1): 'red', (2,2): 'blue' }
     COLORS_3 = {
@@ -47,9 +49,18 @@ def plot_grid(grid, agents, num_attributes, iteration, segregation):
                 image[i, j] = [1, 1, 1]  # White for empty
             else:
                 agent = next(a for a in agents if a.id == grid[i, j])
-                attr = agent.attributes
-                
-                color = COLORS_2[attr] if num_attributes == 2 else COLORS_3[attr]
+                color = 'green'
+                if color_based_on == 'race':
+                    color = color_race[agent.race]
+                elif color_based_on == 'attributes':
+                    if num_attributes == 2:
+                        color = COLORS_2[agent.attributes]
+                    else:
+                        color = COLORS_3[agent.attributes]
+                elif color_based_on == 'income':
+                    color = color_income[agent.starting_income_percentile]
+                else:
+                    print(f"Color based on {color_based_on} is not currently supported.")
                 # color = 'green'
                 if color == 'green':
                     image[i, j] = [0, 1, 0]
