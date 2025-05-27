@@ -1,10 +1,13 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import hamming
 import random
 import grid_setting, main
 from collections import Counter
+import matplotlib.pyplot as plt
+from PIL import Image
+import io
+from datetime import datetime
 
 class RaceType:
     pass
@@ -57,7 +60,7 @@ class Environment:
         """Initialize grid with agents and attributes."""
         self.grid = np.zeros((main.L, main.W), dtype=int)  # 0 for empty
         self.agent_positions = random.sample([(i, j) for i in range(main.L) for j in range(main.W)], self.num_agents)
-        self.agents = []
+        self.agents = {}
         self.open_spots = []
         self.income_difference_threshold = income_difference_threshold
         agent_id = 1
@@ -95,7 +98,7 @@ class Environment:
         for i in range(0, self.num_agents):
             pos = self.agent_positions.pop()
             self.grid[pos] = agent_id
-            self.agents.append(Agent(race=race_list[i], income=None, starting_income_quartile=income_list[i], starting_position=pos, attributes=attr_list[i], id=agent_id))
+            self.agents[agent_id] = Agent(race=race_list[i], income=10, starting_income_quartile=income_list[i], starting_position=pos, attributes=attr_list[i], id=agent_id)
             agent_id += 1
             
         for i in range(height):
@@ -113,7 +116,7 @@ class Environment:
                 ni, nj = i + di, j + dj
                 if 0 <= ni < main.L and 0 <= nj < main.W and self.grid[ni, nj] != 0:
                     id = self.grid[ni, nj]
-                    neighbors.append(next((obj for obj in self.agents if obj.id == id), None))
+                    neighbors.append(self.agents[id])
         return neighbors
     
     def compute_similarity(self, attr1, attr2):
@@ -136,21 +139,21 @@ class Environment:
         segregation = 0
         if isinstance(type, RaceType):
             segregation = 0
-            for agent in self.agents:
+            for agent in self.agents.values():
                 neighbors = self.get_neighbors(agent)
                 for neighbor in neighbors:
                     if agent.race == neighbor.race:
                         segregation += 1
         elif isinstance(type, IncomeType):
             segregation = 0
-            for agent in self.agents:
+            for agent in self.agents.values():
                 neighbors = self.get_neighbors(agent)
                 for neighbor in neighbors:
                     if agent.starting_income_quartile == neighbor.starting_income_quartile:
                         segregation += 1
         elif isinstance(type, AttrType):
             segregation = 0
-            for agent in self.agents:
+            for agent in self.agents.values():
                 neighbors = self.get_neighbors(agent)
                 for neighbor in neighbors:
                     if agent.attributes == neighbor.attributes:
@@ -184,7 +187,7 @@ class Environment:
                         # Revert changes
                         self.grid[ni, nj] = 0
                         self.grid[i, j] = original_id
-                        agent['pos'] = original_pos
+                        agent.pos = original_pos
 
                         if satisfied and has_money:
                             return (ni, nj)
@@ -213,7 +216,7 @@ class Environment:
         
     def get_unsatisfied_agents(self, tau_u, tau_s):
         sad = []
-        for agent in self.agents:
+        for agent in self.agents.values():
             neighbors = self.get_neighbors(agent)
             if not self.is_satisfied(agent, neighbors, tau_u, tau_s):
                 sad.append(agent)
@@ -223,13 +226,21 @@ class Environment:
 def simulate(height, width, population_density, num_attributes, income: IncomeGenerator, race: RaceGenerator, income_difference_threshold, tau_u, tau_s, max_iter=10000, segregation_type=RaceType()):
     """Run the simulation for the extended Schelling model."""
     env = Environment(height, width, population_density, num_attributes, income, race, income_difference_threshold)
-    
+    frames = []
     iteration = 0
+
     while iteration < max_iter:
         segregation = env.compute_segregation(segregation_type)
-        if iteration % 100 == 0 or iteration == 0:
-            grid_setting.plot_grid(env.grid, env.agents, num_attributes, iteration, segregation)
+        fig = grid_setting.plot_grid(env.grid, env.agents, num_attributes, iteration, segregation)
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png')
+        buf.seek(0)
+        img = Image.open(buf).convert("RGB")
+        frames.append(img)
+        plt.close(fig)
+        
         unsatisfied = env.get_unsatisfied_agents(tau_u, tau_s)
+        moved_any = False
         if not unsatisfied:
             print("There are no unsatisfied agents.")
             break
@@ -238,12 +249,31 @@ def simulate(height, width, population_density, num_attributes, income: IncomeGe
             vacant = env.find_vacant_spot(agent, tau_u, tau_s)
             if vacant is not None:
                 env.move_agent(agent, vacant)
+                moved_any = True
             else:
-                print(f"Agent {agent.id} with race: {agent.race}, income {agent.income}, percentile {agent.starting_income_percentile}, at {agent.pos} cannot be moved")
+                print(f"Agent {agent.id} with race: {agent.race}, income {agent.income}, percentile {agent.starting_income_quartile}, at {agent.pos} cannot be moved")
+        if not moved_any:
+            print("We haven't moved any agents on last, iteration, breaking.")
+            break
         iteration += 1
         
     segregation = env.compute_segregation(segregation_type)
-    grid_setting.plot_grid(env.grid, env.agents, num_attributes, iteration, segregation)
+    fig = grid_setting.plot_grid(env.grid, env.agents, num_attributes, iteration, segregation)
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png')
+    buf.seek(0)
+    img = Image.open(buf).convert("RGB")
+    frames.append(img)
+    plt.close(fig)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    frames[0].save(
+        f"model_agent_{num_attributes}_{timestamp}.gif",        # Output filename
+        format='GIF',
+        save_all=True,
+        append_images=frames[1:],
+        duration=300,           # Duration per frame in ms
+        loop=1                  # Loop forever
+    )
     return iteration, segregation
 
     

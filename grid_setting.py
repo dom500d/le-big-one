@@ -31,6 +31,7 @@ def initialize_grid(num_agents, num_attributes):
     return grid, agents
 def plot_grid(grid, agents, num_attributes, iteration, segregation, color_based_on='race'):
     """Plot the grid with color-coded agents."""
+    fig, ax = plt.subplots(figsize=(10, 8))
     color_race = {1: 'green', 2: 'yellow', 3: 'red', 4: 'blue'}
     color_income = color_race
 
@@ -41,14 +42,13 @@ def plot_grid(grid, agents, num_attributes, iteration, segregation, color_based_
         (2,1,1): 'orange', (2,1,2): 'purple', (2,2,1): 'grey', (2,2,2): 'cyan'
     }
     
-    plt.figure(figsize=(10, 8))
     image = np.zeros((main.L, main.W, 3))
     for i in range(main.L):
         for j in range(main.W):
             if grid[i, j] == 0:
                 image[i, j] = [1, 1, 1]  # White for empty
             else:
-                agent = next(a for a in agents if a.id == grid[i, j])
+                agent = agents[grid[i, j]]
                 color = 'green'
                 if color_based_on == 'race':
                     color = color_race[agent.race]
@@ -78,8 +78,8 @@ def plot_grid(grid, agents, num_attributes, iteration, segregation, color_based_
                     image[i, j] = [0.5, 0.5, 0.5]
                 elif color == 'cyan':
                     image[i, j] = [0, 1, 1]
-    plt.imshow(image)
-    plt.title(f"Iteration {iteration}, Segregation Level: {segregation}")
-    plt.axis('off')
-    plt.savefig(f'schelling_agent_{num_attributes}_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}_iter_{iteration}.png')
-    plt.close()
+    ax.imshow(image)
+    ax.set_title(f"Iteration {iteration}, Segregation Level: {segregation}")
+    ax.axis('off')
+    return fig
+    # plt.savefig(f'schelling_agent_{num_attributes}_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}_iter_{iteration}.png')

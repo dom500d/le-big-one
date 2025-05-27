@@ -4,7 +4,7 @@ from scipy.spatial.distance import hamming
 import random
 import grid_setting
 from model import simulate, IncomeGenerator, RaceGenerator
-L, W = 50, 50 # Grid size
+L, W = 25, 25 # Grid size
 if __name__=="__main__":
 #### variable setting 
     # Grid and simulation parameters
@@ -31,4 +31,4 @@ if __name__=="__main__":
     # print(f"3-attribute model converged in {iter_3} iterations with segregation level {seg_3}")
     income = IncomeGenerator([0.25, 0.25, 0.25, 0.25])
     race = RaceGenerator([0.25, 0.25, 0.25, 0.25])
-    simulate(L, W, POP_DENSITY, 2, income, race, 0, TAU_U, TAU_S_2)
+    simulate(L, W, POP_DENSITY, 2, income, race, 100000, TAU_U, TAU_S_2)
