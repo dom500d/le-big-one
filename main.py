@@ -34,7 +34,7 @@ if __name__=="__main__":
             1: [0.2, 0.3, 0.3, 0.1, 0.1],
             2: [0.3, 0.3, 0.2, 0.1, 0.1],
             3: [0.1, 0.2, 0.3, 0.2, 0.2],}, race_gen=race)
-    _, _, un_over_t = simulate(L, W, POP_DENSITY, thing, 0, TAU_U, TAU_S_2)
+    _, _, un_over_t = simulate(L, W, POP_DENSITY, thing, 1, TAU_U, TAU_S_2)
     
     
     # maybe take the most unsatisfied people and then add some money or something to see if they can move.

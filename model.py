@@ -224,7 +224,7 @@ class Environment:
         return sad
 
 
-def simulate(height, width, population_density, race_income: PropertyGenerator, income_difference_threshold, tau_u, tau_s, max_iter=10000, segregation_type=RaceType()):
+def simulate(height, width, population_density, race_income: PropertyGenerator, income_difference_threshold, tau_u, tau_s, max_iter=10000, segregation_type=RaceType(), break_early=True):
     """Run the simulation for the extended Schelling model."""
     env = Environment(height, width, population_density, race_income, income_difference_threshold)
     race_frames = []
@@ -263,12 +263,16 @@ def simulate(height, width, population_density, race_income: PropertyGenerator, 
                 env.move_agent(agent, vacant)
                 moved_any = True
             else:
-                print(f"Agent {agent.id} with race: {agent.race}, income {agent.income}, percentile {agent.starting_income_quartile}, at {agent.pos} cannot be moved")
+                # print(f"Agent {agent.id} with race: {agent.race}, income {agent.income}, percentile {agent.starting_income_quartile}, at {agent.pos} cannot be moved")
+                pass
         if not moved_any:
-            print("We haven't moved any agents on last, iteration, breaking.")
+            if break_early:
+                print("We haven't moved any agents on last, iteration, breaking.")
+                break
             print("Now we increase da money")
             env.income_difference_threshold += 1
             money_increase.append(iteration)
+            
         iteration += 1
         
     segregation = env.compute_segregation(segregation_type)
