@@ -14,7 +14,7 @@ if __name__=="__main__":
     MAX_ITER_2 = 1000  # Max iterations for 2-attribute model
     MAX_ITER_3 = 2000  # Max iterations for 3-attribute model
     TAU_U = 0.5  # Utility threshold (50%)
-    TAU_S_2 = 0.25  # Similarity threshold for 2-attribute (25%)
+    TAU_S_2 = 0.5  # Similarity threshold for 2-attribute (25%)
     TAU_S_3 = 0.5   # Similarity threshold for 3-attribute (50%)
 
     

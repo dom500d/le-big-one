@@ -192,7 +192,7 @@ class Environment:
                         if satisfied and has_money:
                             return (ni, nj)
         return None
-
+    
     def can_move(self, agent: Agent, neighbors: list[Agent], income_difference_treshold):
         if not neighbors:
             return True
