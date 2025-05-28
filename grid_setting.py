@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from scipy.spatial.distance import hamming
 import random, main
 from datetime import datetime
@@ -29,19 +30,17 @@ def initialize_grid(num_agents, num_attributes):
     
     
     return grid, agents
-def plot_grid(grid, agents, num_attributes, iteration, segregation, color_based_on='race'):
+def plot_grid(grid, agents, iteration, segregation,percentage_satisfied, color_based_on='race'):
     """Plot the grid with color-coded agents."""
     fig, ax = plt.subplots(figsize=(10, 8))
-    color_race = {1: 'green', 2: 'yellow', 3: 'red', 4: 'blue'}
-    color_income = color_race
-
-    # Colors for agent types
-    COLORS_2 = { (1,1): 'green', (1,2): 'yellow', (2,1): 'red', (2,2): 'blue' }
-    COLORS_3 = {
-        (1,1,1): 'green', (1,1,2): 'yellow', (1,2,1): 'red', (1,2,2): 'blue',
-        (2,1,1): 'orange', (2,1,2): 'purple', (2,2,1): 'grey', (2,2,2): 'cyan'
-    }
+    race_labels = [f"Race {i}" for i in range(4)]
+    color_race = {0: 'purple', 1: 'green', 2: 'yellow', 3: 'red', 4: 'blue', 5: 'black', 6: 'orange'}
+    race_patches = [mpatches.Patch(color=color_race[i], label=race_labels[i]) for i in range(4)]
     
+    income_labels = [f"Income Quartile {i}" for i in range(1, 7)]
+    color_income = color_race
+    income_patches = [mpatches.Patch(color=color_income[i], label=income_labels[i]) for i in range(6)]
+
     image = np.zeros((main.L, main.W, 3))
     for i in range(main.L):
         for j in range(main.W):
@@ -52,13 +51,10 @@ def plot_grid(grid, agents, num_attributes, iteration, segregation, color_based_
                 color = 'green'
                 if color_based_on == 'race':
                     color = color_race[agent.race]
-                elif color_based_on == 'attributes':
-                    if num_attributes == 2:
-                        color = COLORS_2[agent.attributes]
-                    else:
-                        color = COLORS_3[agent.attributes]
+                    ax.legend(handles=race_patches)
                 elif color_based_on == 'income':
-                    color = color_income[agent.starting_income_percentile]
+                    color = color_income[agent.starting_income_quartile]
+                    ax.legend(handles=income_patches)
                 else:
                     print(f"Color based on {color_based_on} is not currently supported.")
                 # color = 'green'
@@ -79,7 +75,7 @@ def plot_grid(grid, agents, num_attributes, iteration, segregation, color_based_
                 elif color == 'cyan':
                     image[i, j] = [0, 1, 1]
     ax.imshow(image)
-    ax.set_title(f"Iteration {iteration}, Segregation Level: {segregation}")
+    ax.set_title(f"Iteration {iteration}, Homophilly {round(segregation,3)}, Ratio Satisfied{round(percentage_satisfied,3)}")
     ax.axis('off')
     return fig
     # plt.savefig(f'schelling_agent_{num_attributes}_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}_iter_{iteration}.png')

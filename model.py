@@ -137,14 +137,18 @@ class Environment:
     
     def compute_segregation(self, type):
         """Compute segregation level as sum of identical neighbors."""
-        segregation = 0
+        #segregation = 0
         if isinstance(type, RaceType):
-            segregation = 0
+            total_homophily = 0
+            count = 0
             for agent in self.agents.values():
                 neighbors = self.get_neighbors(agent)
-                for neighbor in neighbors:
-                    if agent.race == neighbor.race:
-                        segregation += 1
+                if neighbors:
+                    same_race = sum(1 for neighbor in neighbors if agent.race == neighbor.race)
+                    homophily = same_race / len(neighbors)
+                    total_homophily += homophily
+                    count += 1
+            segregation = total_homophily / count if count > 0 else 0.0
         elif isinstance(type, IncomeType):
             segregation = 0
             for agent in self.agents.values():
@@ -232,9 +236,12 @@ def simulate(height, width, population_density, race_income: PropertyGenerator, 
     iteration = 0
     un_over_t = []
     money_increase = []
+    percentage_sat = 0
+    num_agents = int(height*width*population_density)
+    
     while iteration < max_iter:
         segregation = env.compute_segregation(segregation_type)
-        fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, color_based_on='race')
+        fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, percentage_sat,color_based_on='race')
         buf = io.BytesIO()
         fig.savefig(buf, format='png')
         buf.seek(0)
@@ -242,7 +249,7 @@ def simulate(height, width, population_density, race_income: PropertyGenerator, 
         race_frames.append(img)
         plt.close(fig)
         
-        fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, color_based_on='income')
+        fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat, color_based_on='income')
         buf = io.BytesIO()
         fig.savefig(buf, format='png')
         buf.seek(0)
@@ -272,11 +279,11 @@ def simulate(height, width, population_density, race_income: PropertyGenerator, 
             print("Now we increase da money")
             env.income_difference_threshold += 1
             money_increase.append(iteration)
-            
+        percentage_sat = (num_agents-len(unsatisfied))/num_agents
         iteration += 1
-        
+
     segregation = env.compute_segregation(segregation_type)
-    fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, color_based_on='race')
+    fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat, color_based_on='race')
     buf = io.BytesIO()
     fig.savefig(buf, format='png')
     buf.seek(0)
@@ -292,7 +299,7 @@ def simulate(height, width, population_density, race_income: PropertyGenerator, 
         duration=300,           # Duration per frame in ms
     )
     
-    fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, color_based_on='income')
+    fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat, color_based_on='income')
     buf = io.BytesIO()
     fig.savefig(buf, format='png')
     buf.seek(0)

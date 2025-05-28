@@ -15,8 +15,8 @@ if __name__=="__main__":
     NUM_AGENTS = int(L * W * POP_DENSITY)
     MAX_ITER_2 = 1000  # Max iterations for 2-attribute model
     MAX_ITER_3 = 2000  # Max iterations for 3-attribute model
-    TAU_U = 0.5  # Utility threshold (50%)
-    TAU_S_2 = 0.5  # Similarity threshold for 2-attribute (25%)
+    TAU_U = 0.50  # Utility threshold (50%)
+    TAU_S_2 = 0.50 # Similarity threshold for 2-attribute (25%)
     TAU_S_3 = 0.5   # Similarity threshold for 3-attribute (50%)
 
     
@@ -33,8 +33,6 @@ if __name__=="__main__":
     # print(f"3-attribute model converged in {iter_3} iterations with segregation level {seg_3}")
     income = IncomeGenerator([0.25, 0.25, 0.25, 0.25])
     race = RaceGenerator([0.25, 0.25, 0.25, 0.25])
-
-    simulate(L, W, POP_DENSITY, 2, income, race, 100000, TAU_U, TAU_S_2)
 
     thing = PropertyGenerator({
             0: [0.1, 0.2, 0.4, 0.2, 0.1],
