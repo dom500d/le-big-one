@@ -136,14 +136,18 @@ class Environment:
     
     def compute_segregation(self, type):
         """Compute segregation level as sum of identical neighbors."""
-        segregation = 0
+        #segregation = 0
         if isinstance(type, RaceType):
-            segregation = 0
+            total_homophily = 0
+            count = 0
             for agent in self.agents.values():
                 neighbors = self.get_neighbors(agent)
-                for neighbor in neighbors:
-                    if agent.race == neighbor.race:
-                        segregation += 1
+                if neighbors:
+                    same_race = sum(1 for neighbor in neighbors if agent.race == neighbor.race)
+                    homophily = same_race / len(neighbors)
+                    total_homophily += homophily
+                    count += 1
+            segregation = total_homophily / count if count > 0 else 0.0
         elif isinstance(type, IncomeType):
             segregation = 0
             for agent in self.agents.values():
@@ -228,15 +232,38 @@ def simulate(height, width, population_density, num_attributes, income: IncomeGe
     env = Environment(height, width, population_density, num_attributes, income, race, income_difference_threshold)
     frames = []
     iteration = 0
+<<<<<<< Updated upstream
 
     while iteration < max_iter:
         segregation = env.compute_segregation(segregation_type)
         fig = grid_setting.plot_grid(env.grid, env.agents, num_attributes, iteration, segregation)
+=======
+    un_over_t = []
+    money_increase = []
+    percentage_sat = 0
+    num_agents = int(height*width*population_density)
+    
+    while iteration < max_iter:
+        segregation = env.compute_segregation(segregation_type)
+        fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, percentage_sat,color_based_on='race')
+>>>>>>> Stashed changes
         buf = io.BytesIO()
         fig.savefig(buf, format='png')
         buf.seek(0)
         img = Image.open(buf).convert("RGB")
+<<<<<<< Updated upstream
         frames.append(img)
+=======
+        race_frames.append(img)
+        plt.close(fig)
+        
+        fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat, color_based_on='income')
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png')
+        buf.seek(0)
+        img = Image.open(buf).convert("RGB")
+        income_frames.append(img)
+>>>>>>> Stashed changes
         plt.close(fig)
         
         unsatisfied = env.get_unsatisfied_agents(tau_u, tau_s)
@@ -253,12 +280,26 @@ def simulate(height, width, population_density, num_attributes, income: IncomeGe
             else:
                 print(f"Agent {agent.id} with race: {agent.race}, income {agent.income}, percentile {agent.starting_income_quartile}, at {agent.pos} cannot be moved")
         if not moved_any:
+<<<<<<< Updated upstream
             print("We haven't moved any agents on last, iteration, breaking.")
             break
+=======
+            if break_early:
+                print("We haven't moved any agents on last, iteration, breaking.")
+                break
+            print("Now we increase da money")
+            env.income_difference_threshold += 1
+            money_increase.append(iteration)
+        percentage_sat = (num_agents-len(unsatisfied))/num_agents
+>>>>>>> Stashed changes
         iteration += 1
-        
+
     segregation = env.compute_segregation(segregation_type)
+<<<<<<< Updated upstream
     fig = grid_setting.plot_grid(env.grid, env.agents, num_attributes, iteration, segregation)
+=======
+    fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat, color_based_on='race')
+>>>>>>> Stashed changes
     buf = io.BytesIO()
     fig.savefig(buf, format='png')
     buf.seek(0)
@@ -274,6 +315,34 @@ def simulate(height, width, population_density, num_attributes, income: IncomeGe
         duration=300,           # Duration per frame in ms
         loop=1                  # Loop forever
     )
+<<<<<<< Updated upstream
     return iteration, segregation
+=======
+    
+    fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat, color_based_on='income')
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png')
+    buf.seek(0)
+    img = Image.open(buf).convert("RGB")
+    income_frames.append(img)
+    plt.close(fig)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    income_frames[0].save(
+        f"model_income_{income_difference_threshold}_{tau_u}_{tau_s}_{timestamp}.gif",        # Output filename
+        format='GIF',
+        save_all=True,
+        append_images=income_frames[1:],
+        duration=300,           # Duration per frame in ms
+    )
+    iteration = list(range(len(un_over_t)))
+    plt.plot(iteration, un_over_t)
+    plt.title("# of Unsatisifed Agents over Iterations")
+    plt.xlabel("Iteration")
+    plt.ylabel("Count")
+    plt.grid(visible=True)
+    plt.savefig(f"unsatisfied_over_t_{timestamp}.png") 
+    print(f"We increased the money at {money_increase}")
+    return iteration, segregation, un_over_t
+>>>>>>> Stashed changes
 
     
