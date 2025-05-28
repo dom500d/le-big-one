@@ -3,13 +3,10 @@ import matplotlib.pyplot as plt
 from scipy.spatial.distance import hamming
 import random
 import grid_setting
-<<<<<<< Updated upstream
-from model import simulate, IncomeGenerator, RaceGenerator
-L, W = 25, 25 # Grid size
-=======
+
 from model import simulate, IncomeGenerator, RaceGenerator, PropertyGenerator
 L, W = 20, 20 # Grid size
->>>>>>> Stashed changes
+
 if __name__=="__main__":
 #### variable setting 
     # Grid and simulation parameters
@@ -36,9 +33,9 @@ if __name__=="__main__":
     # print(f"3-attribute model converged in {iter_3} iterations with segregation level {seg_3}")
     income = IncomeGenerator([0.25, 0.25, 0.25, 0.25])
     race = RaceGenerator([0.25, 0.25, 0.25, 0.25])
-<<<<<<< Updated upstream
+
     simulate(L, W, POP_DENSITY, 2, income, race, 100000, TAU_U, TAU_S_2)
-=======
+
     thing = PropertyGenerator({
             0: [0.1, 0.2, 0.4, 0.2, 0.1],
             1: [0.2, 0.3, 0.3, 0.1, 0.1],
@@ -49,4 +46,4 @@ if __name__=="__main__":
     
     # maybe take the most unsatisfied people and then add some money or something to see if they can move.
     # get the number of unsatisified agents over time
->>>>>>> Stashed changes
+

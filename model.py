@@ -20,13 +20,11 @@ class AttrType:
 
 
 class Agent:
-    
-    def __init__(self, race, income, starting_income_quartile, starting_position, attributes, id):
+    def __init__(self, race, income, starting_income_quartile, starting_position, id):
         self.race = race
         self.income = income
         self.starting_income_quartile = starting_income_quartile
         self.pos = starting_position
-        self.attributes = attributes
         self.id = id
 
 class IncomeGenerator:
@@ -51,8 +49,34 @@ class RaceGenerator:
             
         return ret
     
+class PropertyGenerator:
+    def __init__(self, race_income_probs: dict, race_gen: RaceGenerator):
+        self.race_income_probs = race_income_probs
+        self.race_gen = race_gen
+        self.num_races = len(race_income_probs.keys())
+
+    def get_counts(self, num_agents):
+        ret = []
+        incomes = list(range(1, len(self.race_income_probs[0]) + 1))
+        porportions = self.race_gen.get_counts(num_agents)
+        races = list(range(0, self.num_races))
+        race_list = [attr for attr, count in zip(races, porportions) for _ in range(count)]
+        random.shuffle(race_list)
+        diff = num_agents-len(race_list)
+        race_list.extend([0] * diff)
+      
+        for i in range(num_agents):
+            race = race_list[i]
+            probs = self.race_income_probs[race]
+            income_percentile = random.choices(incomes, weights=probs, k=1)[0]
+            ret.append((race, income_percentile))
+        
+        return ret
+        
+        
+    
 class Environment:
-    def __init__(self, height, width, population_density, num_attributes, income: IncomeGenerator, race: RaceGenerator, income_difference_threshold):
+    def __init__(self, height, width, population_density, property_generator: PropertyGenerator, income_difference_threshold):
         self.height = height
         self.width = width
         self.density = population_density
@@ -65,40 +89,17 @@ class Environment:
         self.income_difference_threshold = income_difference_threshold
         agent_id = 1
         
-        # Generate possible attribute combinations
-        if num_attributes == 2:
-            attributes_list = [(a1, a2) for a1 in [1, 2] for a2 in [1, 2]]
-        else:
-            attributes_list = [(a1, a2, a3) for a1 in [1, 2] for a2 in [1, 2] for a3 in [1, 2]]
-        
         # Generate race/income distributions
-        porportions = race.get_counts(self.num_agents)
-        races = list(range(1, len(porportions) + 1))
-        race_list = [attr for attr, count in zip(races, porportions) for _ in range(count)]
-        diff = self.num_agents-len(race_list)
-        race_list.extend([1] * diff)
-        random.shuffle(race_list)
-        
-
-        porportions = income.get_counts(self.num_agents)
-        incomes = list(range(1, len(porportions) + 1))
-        income_list = [attr for attr, count in zip(incomes, porportions) for _ in range(count)]
-        diff = self.num_agents-len(income_list)
-        income_list.extend([1] * diff)
-        random.shuffle(income_list)
-        
-        
-        agents_per_type = self.num_agents // len(attributes_list)
-        listttt = [agents_per_type for _ in range(len(attributes_list))]
-        attr_list = [attr for attr, count in zip(attributes_list, listttt) for _ in range(count)]
-        diff = self.num_agents-len(attr_list)
-        attr_list.extend([(1, 1)] * diff)
-        random.shuffle(attr_list)
+        race_income_list = property_generator.get_counts(self.num_agents)
+        diff = self.num_agents-len(race_income_list)
+        race_income_list.extend([(0, 1)] * diff)
+        random.shuffle(race_income_list)
         
         for i in range(0, self.num_agents):
+            race_and_income = race_income_list[i]
             pos = self.agent_positions.pop()
             self.grid[pos] = agent_id
-            self.agents[agent_id] = Agent(race=race_list[i], income=10, starting_income_quartile=income_list[i], starting_position=pos, attributes=attr_list[i], id=agent_id)
+            self.agents[agent_id] = Agent(race=race_and_income[0], income=10, starting_income_quartile=race_and_income[1], starting_position=pos, id=agent_id)
             agent_id += 1
             
         for i in range(height):
@@ -121,7 +122,7 @@ class Environment:
     
     def compute_similarity(self, attr1, attr2):
         """Compute similarity using Hamming distance."""
-        return 1 - hamming(attr1, attr2)
+        return 1 - hamming([attr1], [attr2])
 
     def is_satisfied(self, agent: Agent, neighbors: list[Agent], tau_u, tau_s):
         """Check if agent is satisfied based on utility and similarity thresholds."""
@@ -129,25 +130,21 @@ class Environment:
             return True  # No neighbors, satisfied
         similar_neighbors = 0
         for neighbor in neighbors:
-            if self.compute_similarity(agent.attributes, neighbor.attributes) >= tau_s:
+            if self.compute_similarity(agent.race, neighbor.race) >= tau_s:
                 similar_neighbors += 1
         theta = similar_neighbors / len(neighbors)
         return theta >= tau_u
     
     def compute_segregation(self, type):
         """Compute segregation level as sum of identical neighbors."""
-        #segregation = 0
+        segregation = 0
         if isinstance(type, RaceType):
-            total_homophily = 0
-            count = 0
+            segregation = 0
             for agent in self.agents.values():
                 neighbors = self.get_neighbors(agent)
-                if neighbors:
-                    same_race = sum(1 for neighbor in neighbors if agent.race == neighbor.race)
-                    homophily = same_race / len(neighbors)
-                    total_homophily += homophily
-                    count += 1
-            segregation = total_homophily / count if count > 0 else 0.0
+                for neighbor in neighbors:
+                    if agent.race == neighbor.race:
+                        segregation += 1
         elif isinstance(type, IncomeType):
             segregation = 0
             for agent in self.agents.values():
@@ -196,15 +193,15 @@ class Environment:
                         if satisfied and has_money:
                             return (ni, nj)
         return None
-    
+
     def can_move(self, agent: Agent, neighbors: list[Agent], income_difference_treshold):
         if not neighbors:
             return True
         income_avg = 0
         for neighbor in neighbors:
-            income_avg += neighbor.income
+            income_avg += neighbor.starting_income_quartile
         income_avg = income_avg / len(neighbors)
-        if agent.income + income_difference_treshold >= income_avg:
+        if agent.starting_income_quartile + income_difference_treshold >= income_avg:
             return True
         else:
             return False
@@ -227,46 +224,34 @@ class Environment:
         return sad
 
 
-def simulate(height, width, population_density, num_attributes, income: IncomeGenerator, race: RaceGenerator, income_difference_threshold, tau_u, tau_s, max_iter=10000, segregation_type=RaceType()):
+def simulate(height, width, population_density, race_income: PropertyGenerator, income_difference_threshold, tau_u, tau_s, max_iter=10000, segregation_type=RaceType(), break_early=True):
     """Run the simulation for the extended Schelling model."""
-    env = Environment(height, width, population_density, num_attributes, income, race, income_difference_threshold)
-    frames = []
+    env = Environment(height, width, population_density, race_income, income_difference_threshold)
+    race_frames = []
+    income_frames = []
     iteration = 0
-<<<<<<< Updated upstream
-
-    while iteration < max_iter:
-        segregation = env.compute_segregation(segregation_type)
-        fig = grid_setting.plot_grid(env.grid, env.agents, num_attributes, iteration, segregation)
-=======
     un_over_t = []
     money_increase = []
-    percentage_sat = 0
-    num_agents = int(height*width*population_density)
-    
     while iteration < max_iter:
         segregation = env.compute_segregation(segregation_type)
-        fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, percentage_sat,color_based_on='race')
->>>>>>> Stashed changes
+        fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, color_based_on='race')
         buf = io.BytesIO()
         fig.savefig(buf, format='png')
         buf.seek(0)
         img = Image.open(buf).convert("RGB")
-<<<<<<< Updated upstream
-        frames.append(img)
-=======
         race_frames.append(img)
         plt.close(fig)
         
-        fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat, color_based_on='income')
+        fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, color_based_on='income')
         buf = io.BytesIO()
         fig.savefig(buf, format='png')
         buf.seek(0)
         img = Image.open(buf).convert("RGB")
         income_frames.append(img)
->>>>>>> Stashed changes
         plt.close(fig)
         
         unsatisfied = env.get_unsatisfied_agents(tau_u, tau_s)
+        un_over_t.append(len(unsatisfied))
         moved_any = False
         if not unsatisfied:
             print("There are no unsatisfied agents.")
@@ -278,48 +263,36 @@ def simulate(height, width, population_density, num_attributes, income: IncomeGe
                 env.move_agent(agent, vacant)
                 moved_any = True
             else:
-                print(f"Agent {agent.id} with race: {agent.race}, income {agent.income}, percentile {agent.starting_income_quartile}, at {agent.pos} cannot be moved")
+                # print(f"Agent {agent.id} with race: {agent.race}, income {agent.income}, percentile {agent.starting_income_quartile}, at {agent.pos} cannot be moved")
+                pass
         if not moved_any:
-<<<<<<< Updated upstream
-            print("We haven't moved any agents on last, iteration, breaking.")
-            break
-=======
             if break_early:
                 print("We haven't moved any agents on last, iteration, breaking.")
                 break
             print("Now we increase da money")
             env.income_difference_threshold += 1
             money_increase.append(iteration)
-        percentage_sat = (num_agents-len(unsatisfied))/num_agents
->>>>>>> Stashed changes
+            
         iteration += 1
-
+        
     segregation = env.compute_segregation(segregation_type)
-<<<<<<< Updated upstream
-    fig = grid_setting.plot_grid(env.grid, env.agents, num_attributes, iteration, segregation)
-=======
-    fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat, color_based_on='race')
->>>>>>> Stashed changes
+    fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, color_based_on='race')
     buf = io.BytesIO()
     fig.savefig(buf, format='png')
     buf.seek(0)
     img = Image.open(buf).convert("RGB")
-    frames.append(img)
+    race_frames.append(img)
     plt.close(fig)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    frames[0].save(
-        f"model_agent_{num_attributes}_{timestamp}.gif",        # Output filename
+    race_frames[0].save(
+        f"model_race_{income_difference_threshold}_{tau_u}_{tau_s}_{timestamp}.gif",        # Output filename
         format='GIF',
         save_all=True,
-        append_images=frames[1:],
+        append_images=race_frames[1:],
         duration=300,           # Duration per frame in ms
-        loop=1                  # Loop forever
     )
-<<<<<<< Updated upstream
-    return iteration, segregation
-=======
     
-    fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat, color_based_on='income')
+    fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, color_based_on='income')
     buf = io.BytesIO()
     fig.savefig(buf, format='png')
     buf.seek(0)
@@ -343,6 +316,5 @@ def simulate(height, width, population_density, num_attributes, income: IncomeGe
     plt.savefig(f"unsatisfied_over_t_{timestamp}.png") 
     print(f"We increased the money at {money_increase}")
     return iteration, segregation, un_over_t
->>>>>>> Stashed changes
 
     
