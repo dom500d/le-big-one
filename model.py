@@ -235,13 +235,18 @@ def simulate(height, width, population_density, race_income: PropertyGenerator, 
     income_frames = []
     iteration = 0
     un_over_t = []
+    seg_over_t = []
     money_increase = []
     percentage_sat = 0
     num_agents = int(height*width*population_density)
     
+    max_income_threshold = 3  # Optional cap to avoid infinite increase
+    relaxation_applied = False  # To ensure relaxation is only applied once unless you want to do it repeatedly
+
     while iteration < max_iter:
         segregation = env.compute_segregation(segregation_type)
-        fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, percentage_sat,color_based_on='race')
+        seg_over_t.append(segregation)
+        fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, percentage_sat,population_density,color_based_on='race' )
         buf = io.BytesIO()
         fig.savefig(buf, format='png')
         buf.seek(0)
@@ -249,7 +254,7 @@ def simulate(height, width, population_density, race_income: PropertyGenerator, 
         race_frames.append(img)
         plt.close(fig)
         
-        fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat, color_based_on='income')
+        fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat,population_density, color_based_on='income_intensity' )
         buf = io.BytesIO()
         fig.savefig(buf, format='png')
         buf.seek(0)
@@ -264,7 +269,8 @@ def simulate(height, width, population_density, race_income: PropertyGenerator, 
             print("There are no unsatisfied agents.")
             break
         random.shuffle(unsatisfied)
-        for agent in unsatisfied:
+        
+        '''for agent in unsatisfied:
             vacant = env.find_vacant_spot(agent, tau_u, tau_s)
             if vacant is not None:
                 env.move_agent(agent, vacant)
@@ -278,50 +284,101 @@ def simulate(height, width, population_density, race_income: PropertyGenerator, 
                 break
             print("Now we increase da money")
             env.income_difference_threshold += 1
-            money_increase.append(iteration)
+            money_increase.append(iteration)'''
+        
+        for agent in unsatisfied:
+            vacant = env.find_vacant_spot(agent, tau_u, tau_s)
+            if vacant is not None:
+                env.move_agent(agent, vacant)
+                moved_any = True
+
+        if not moved_any:
+            if not relaxation_applied and break_early:
+                print("No moves possible, increasing da money and lowering the thresholds.")
+                money_increase.append(iteration)
+
+                # Relax constraints
+                env.income_difference_threshold = min(env.income_difference_threshold + 1, max_income_threshold)
+                tau_u = max(0, tau_u - 0.1)  # Decrease satisfaction threshold
+                tau_s = max(0, tau_s - 0.1)
+                relaxation_applied = True
+
+                # Continue from the current state
+                continue
+
+            elif break_early:
+                print("No movement and relaxation already applied, breaking.")
+                break
+            else:
+                print("No movement, increasing income threshold.")
+                #env.income_difference_threshold += 1
+                money_increase.append(iteration)
         percentage_sat = (num_agents-len(unsatisfied))/num_agents
         iteration += 1
 
+
+    percentage_sat = (num_agents-len(unsatisfied))/num_agents #Calculate final satisfaction
+
     segregation = env.compute_segregation(segregation_type)
-    fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat, color_based_on='race')
+    fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat,population_density, color_based_on='race')
     buf = io.BytesIO()
     fig.savefig(buf, format='png')
     buf.seek(0)
     img = Image.open(buf).convert("RGB")
     race_frames.append(img)
     plt.close(fig)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%m%d_%H%M")
     race_frames[0].save(
-        f"model_race_{income_difference_threshold}_{tau_u}_{tau_s}_{timestamp}.gif",        # Output filename
+        f"model_race_{height}_{width}_{population_density}_{income_difference_threshold}_{tau_u}_{tau_s}_{timestamp}.gif",        # Output filename
         format='GIF',
         save_all=True,
         append_images=race_frames[1:],
         duration=300,           # Duration per frame in ms
     )
     
-    fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat, color_based_on='income')
+    fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat,population_density, color_based_on='income_intensity')
     buf = io.BytesIO()
     fig.savefig(buf, format='png')
     buf.seek(0)
     img = Image.open(buf).convert("RGB")
     income_frames.append(img)
     plt.close(fig)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
     income_frames[0].save(
-        f"model_income_{income_difference_threshold}_{tau_u}_{tau_s}_{timestamp}.gif",        # Output filename
+        f"model_income_{height}_{width}_{population_density}_{income_difference_threshold}_{tau_u}_{tau_s}_{timestamp}.gif",        # Output filename
         format='GIF',
         save_all=True,
         append_images=income_frames[1:],
         duration=300,           # Duration per frame in ms
     )
-    iteration = list(range(len(un_over_t)))
-    plt.plot(iteration, un_over_t)
-    plt.title("# of Unsatisifed Agents over Iterations")
-    plt.xlabel("Iteration")
-    plt.ylabel("Count")
-    plt.grid(visible=True)
-    plt.savefig(f"unsatisfied_over_t_{timestamp}.png") 
-    print(f"We increased the money at {money_increase}")
-    return iteration, segregation, un_over_t
+    fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(10, 10), sharex=True)
 
+    # --- Plot 1: Unsatisfied Agents Over Time ---
+    iteration = list(range(len(un_over_t)))
+    axs[0].plot(iteration, un_over_t, label="Unsatisfied Agents", color="blue")
+    for i in money_increase:
+        if i < len(un_over_t):
+            axs[0].scatter(i, un_over_t[i], color='red', zorder=5, label='Income Threshold Increased' if i == money_increase[0] else "")
+
+    axs[0].set_ylabel("Unsatisfied Count")
+    axs[0].set_title("# of Unsatisfied Agents Over Iterations")
+    axs[0].legend()
+    axs[0].grid(True)
+
+
+    # Plottinv
+    axs[1].plot(iteration, seg_over_t, color='green', label="Homophilly")
+
+    for i in money_increase:
+        if i < len(seg_over_t):
+            axs[1].scatter(i, seg_over_t[i], color='red', zorder=5)
+
+    axs[1].set_xlabel("Iteration")
+    axs[1].set_ylabel("Homophilly")
+    axs[1].set_title("Homophilly Over Iterations")
+    axs[1].legend()
+    axs[1].grid(True)
+
+    plt.savefig(f"unsatisfied_over_t_{height}_{width}_{population_density}_{income_difference_threshold}_{tau_u}_{tau_s}_{timestamp}.png") 
+    return un_over_t
     
