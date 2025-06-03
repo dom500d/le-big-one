@@ -358,8 +358,12 @@ def simulate(height, width, population_density, race_income: PropertyGenerator, 
                 for i in range((main.L * main.W)//1000):
                     agent_positions = random.sample(all_positions, 1) 
                     main.good_school.append(agent_positions[0])  
+                    print(f"good scool:{agent_positions[0]}")
+                    
                     agent_positions = random.sample(all_positions, 1) 
-                    main.bad_school.append(agent_positions[0])  #
+                    main.bad_school.append(agent_positions[0])  
+                    print(f"bad scool:{agent_positions[0]}")
+                    
                 print("No moves possible, increasing da money and lowering the thresholds.")
                 money_increase.append(iteration)
 
