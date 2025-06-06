@@ -6,10 +6,13 @@ import grid_setting
 from scipy.stats import lognorm
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 from model import simulate, IncomeGenerator, RaceGenerator, PropertyGenerator
 L, W = 75, 75 # Grid size
 
 =======
+=======
+>>>>>>> Stashed changes
 from model import simulate, IncomeGenerator, RaceGenerator, PropertyGenerator,Property_Gaussian_Generator
 L, W = 120, 120 # Grid size
 good_school = []
@@ -17,6 +20,9 @@ bad_school = []
 good_school_zone = []
 bad_school_zone = []
 relaxation_applied = False
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 if __name__=="__main__":
 #### variable setting 
@@ -87,6 +93,7 @@ if __name__=="__main__":
     hispanic = 3
     '''
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
     san_diego = {0: [0.15, 0.15, 0.16, 0.19, 0.22],
             1: [0.22, 0.24, 0.23, 0.17, 0.14],
@@ -102,6 +109,8 @@ if __name__=="__main__":
     # maybe take the most unsatisfied people and then add some money or something to see if they can move.
     # get the number of unsatisified agents over time
 =======
+=======
+>>>>>>> Stashed changes
     san_diego = {
         0: pdf_values_white,
         1: pdf_values_black,
@@ -157,5 +166,8 @@ plt.tight_layout()
 plt.show()'''
 
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
