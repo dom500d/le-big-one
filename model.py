@@ -203,30 +203,50 @@ class Environment:
         """Find nearest vacant spot where agent would be satisfied."""
         i, j = agent.pos
         original_pos = (i, j)
-        for r in range(1, max(self.width, self.height)):
-            for di in range(-r, r + 1):
-                for dj in range(-r, r + 1):
-                    if abs(di) != r and abs(dj) != r:
-                        continue
-                    ni, nj = i + di, j + dj
-                    if 0 <= ni < self.height and 0 <= nj < self.width and self.grid[ni, nj] == 0:
-                        # Save current state
-                        original_id = agent.id
-                        self.grid[i, j] = 0
-                        self.grid[ni, nj] = original_id
-                        agent.pos = (ni, nj)
+        for index, (ni, nj) in enumerate(self.open_spots):
+            # Save current state
+            original_id = agent.id
+            self.grid[i, j] = 0
+            self.grid[ni, nj] = original_id
+            agent.pos = (ni, nj)
 
-                        neighbors = self.get_neighbors(agent)
+            neighbors = self.get_neighbors(agent)
+            
+            satisfied = self.is_satisfied(agent, neighbors, tau_u, tau_s)
+            has_money = self.can_move(agent, neighbors, self.income_difference_threshold)
+            # Revert changes
+            self.grid[ni, nj] = 0
+            self.grid[i, j] = original_id
+            agent.pos = original_pos
+
+            if satisfied and has_money:
+                self.open_spots.pop(index)
+                self.open_spots.append(original_pos)
+                return (ni, nj)
+        # for r in range(1, max(self.width, self.height)):
+        #     for di in range(-r, r + 1):
+        #         for dj in range(-r, r + 1):
+        #             if abs(di) != r and abs(dj) != r:
+        #                 continue
+        #             ni, nj = i + di, j + dj
+        #             if 0 <= ni < self.height and 0 <= nj < self.width and self.grid[ni, nj] == 0:
+        #                 # Save current state
+        #                 original_id = agent.id
+        #                 self.grid[i, j] = 0
+        #                 self.grid[ni, nj] = original_id
+        #                 agent.pos = (ni, nj)
+
+        #                 neighbors = self.get_neighbors(agent)
                         
-                        satisfied = self.is_satisfied(agent, neighbors, tau_u, tau_s)
-                        has_money = self.can_move(agent, neighbors, self.income_difference_threshold)
-                        # Revert changes
-                        self.grid[ni, nj] = 0
-                        self.grid[i, j] = original_id
-                        agent.pos = original_pos
+        #                 satisfied = self.is_satisfied(agent, neighbors, tau_u, tau_s)
+        #                 has_money = self.can_move(agent, neighbors, self.income_difference_threshold)
+        #                 # Revert changes
+        #                 self.grid[ni, nj] = 0
+        #                 self.grid[i, j] = original_id
+        #                 agent.pos = original_pos
 
-                        if satisfied and has_money:
-                            return (ni, nj)
+        #                 if satisfied and has_money:
+        #                     return (ni, nj)
         return None
 
     def can_move(self, agent: Agent, neighbors: list[Agent], income_difference_treshold):
@@ -257,6 +277,7 @@ class Environment:
             if not self.is_satisfied(agent, neighbors, tau_u, tau_s):
                 sad.append(agent)
         return sad
+    
 def get_school_range(school_positions):
     range_set = set()
     for x, y in school_positions:

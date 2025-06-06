@@ -8,7 +8,7 @@ from scipy.stats import lognorm
 
 
 from model import simulate, IncomeGenerator, RaceGenerator, PropertyGenerator
-L, W = 5, 5 # Grid size
+L, W = 50, 50 # Grid size
 good_school = []
 bad_school = []
 good_school_zone = []
