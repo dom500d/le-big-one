@@ -8,15 +8,10 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import io
 from datetime import datetime
-<<<<<<< Updated upstream
-=======
 from scipy.stats import truncnorm
 import math
 
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
 
 class RaceType:
     pass
@@ -142,10 +137,10 @@ class Environment:
             if self.compute_similarity(agent.race, neighbor.race) >= tau_s:
                 similar_neighbors += 1
         theta = similar_neighbors / len(neighbors)
-<<<<<<< Updated upstream
+
         return theta >= tau_u
     
-=======
+
 
 
         if main.relaxation_applied:
@@ -168,10 +163,7 @@ class Environment:
     
 
 
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
     def compute_segregation(self, type):
         """Compute segregation level as sum of identical neighbors."""
         #segregation = 0
@@ -337,12 +329,6 @@ def simulate(height, width, population_density, race_income: PropertyGenerator, 
                 moved_any = True
 
         if not moved_any:
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-            if not relaxation_applied and break_early:
-=======
-=======
->>>>>>> Stashed changes
             if not main.relaxation_applied and break_early:
                 all_positions = [(i, j) for i in range(main.L) for j in range(main.W)]
                 for i in range((main.L * main.W)//1000):
@@ -356,32 +342,18 @@ def simulate(height, width, population_density, race_income: PropertyGenerator, 
                     
                 main.good_school_zone = get_school_range(main.good_school)
                 main.bad_school_zone = get_school_range(main.bad_school)
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
                 print("No moves possible, increasing da money and lowering the thresholds.")
                 money_increase.append(iteration)
 
                 # Relax constraints
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                env.income_difference_threshold = min(env.income_difference_threshold + 1, max_income_threshold)
-                tau_u = max(0, tau_u - 0.1)  # Decrease satisfaction threshold
-                tau_s = max(0, tau_s - 0.1)
-                relaxation_applied = True
-=======
-=======
->>>>>>> Stashed changes
+
                 env.income_difference_threshold = env.income_difference_threshold + 3
 
                 tau_u = tau_u - 0.3  # Decrease satisfaction threshold
                 tau_s = tau_s - 0.3
                 main.relaxation_applied = True
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
 
                 # Continue from the current state
                 continue

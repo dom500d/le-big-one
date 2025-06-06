@@ -5,25 +5,16 @@ import random
 import grid_setting
 from scipy.stats import lognorm
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-from model import simulate, IncomeGenerator, RaceGenerator, PropertyGenerator
-L, W = 75, 75 # Grid size
 
-=======
-=======
->>>>>>> Stashed changes
-from model import simulate, IncomeGenerator, RaceGenerator, PropertyGenerator,Property_Gaussian_Generator
-L, W = 120, 120 # Grid size
+
+from model import simulate, IncomeGenerator, RaceGenerator, PropertyGenerator
+L, W = 5, 5 # Grid size
 good_school = []
 bad_school = []
 good_school_zone = []
 bad_school_zone = []
 relaxation_applied = False
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
 if __name__=="__main__":
 #### variable setting 
     # Grid and simulation parameters
@@ -92,25 +83,17 @@ if __name__=="__main__":
     asian = 2
     hispanic = 3
     '''
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 
-    san_diego = {0: [0.15, 0.15, 0.16, 0.19, 0.22],
+    '''san_diego = {0: [0.15, 0.15, 0.16, 0.19, 0.22],
             1: [0.22, 0.24, 0.23, 0.17, 0.14],
             2: [0.13, 0.13, 0.14, 0.19, 0.24],
-            3: [0.25, 0.25, 0.20, 0.18, 0.16]}
+            3: [0.25, 0.25, 0.20, 0.18, 0.16]}'''
     
-    thing = PropertyGenerator(san_diego, race_gen=race)
-    for i in range(0,len(POP_DENSITY)):
-        NUM_AGENTS = int(L * W * POP_DENSITY[i])
-        un_over_t = simulate(L, W, POP_DENSITY[i], thing, income_threshold, TAU_U, TAU_S_2)
     
     
     # maybe take the most unsatisfied people and then add some money or something to see if they can move.
     # get the number of unsatisified agents over time
-=======
-=======
->>>>>>> Stashed changes
+
     san_diego = {
         0: pdf_values_white,
         1: pdf_values_black,
@@ -143,7 +126,7 @@ if __name__=="__main__":
         thing = PropertyGenerator(san_diego, race_gen=race)
         NUM_AGENTS = int(L * W * POP_DENSITY[i])
         un_over_t = simulate(L, W, POP_DENSITY[i], thing, income_threshold, TAU_U, TAU_S_2)'''
-    thing = Property_Gaussian_Generator(san_diego, race_gen=race)
+    #thing = Property_Gaussian_Generator(san_diego, race_gen=race)
     thing = PropertyGenerator(san_diego, race_gen=race)
     NUM_AGENTS = int(L * W * POP_DENSITY)
     un_over_t = simulate(L, W, POP_DENSITY, thing, income_threshold, TAU_U, TAU_S_2)
@@ -166,8 +149,5 @@ plt.tight_layout()
 plt.show()'''
 
 
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
 

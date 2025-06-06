@@ -43,16 +43,10 @@ def initialize_grid(num_agents, num_attributes):
     
     return grid, agents
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
+
 def encode_income_group(quartile):
     return min((quartile - 1) // 6 + 1, 5)
->>>>>>> Stashed changes
-=======
-def encode_income_group(quartile):
-    return min((quartile - 1) // 6 + 1, 5)
->>>>>>> Stashed changes
+
 
 def plot_grid(grid, agents, iteration, segregation, percentage_satisfied,pop_density = 0.5, color_based_on='race'):
     """Plot the grid with color-coded agents."""
@@ -66,15 +60,11 @@ def plot_grid(grid, agents, iteration, segregation, percentage_satisfied,pop_den
 
     # Prepare legend patches depending on mode
     if color_based_on == 'race':
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+
         labels = [f"Race {i}" for i in color_race]
-=======
+
         labels = race
->>>>>>> Stashed changes
-=======
-        labels = race
->>>>>>> Stashed changes
+
         legend_patches = [mpatches.Patch(color=color_race[i], label=labels[i]) for i in color_race]
 
     elif color_based_on == 'income':
@@ -87,12 +77,7 @@ def plot_grid(grid, agents, iteration, segregation, percentage_satisfied,pop_den
         cmap_income = truncate_colormap(cm.get_cmap('Greens'), minval=0.25, maxval=1.0)
         labels = [f"Income Quartile {i}" for i in range(1,6)]
         legend_patches = [mpatches.Patch(color=cmap_income(norm(i)), label=labels[i-1]) for i in range(1,6)]
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    
-=======
-=======
->>>>>>> Stashed changes
+
 
     elif color_based_on == 'race_with_schools':
         labels = race
@@ -100,10 +85,7 @@ def plot_grid(grid, agents, iteration, segregation, percentage_satisfied,pop_den
         legend_patches.append(mpatches.Patch(color='black', label="Good School"))
         legend_patches.append(mpatches.Patch(color='gray', label="Bad School"))
 
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
     else:
         raise ValueError(f"Unsupported color basis: {color_based_on}")
 
@@ -112,31 +94,20 @@ def plot_grid(grid, agents, iteration, segregation, percentage_satisfied,pop_den
     for i in range(main.L):
         for j in range(main.W):
             if grid[i, j] == 0:
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
+
                 if color_based_on == 'race_with_schools':
                     if (i, j) in main.good_school:
                         image[i, j] = to_rgb('black')  # Black for good schools
                     elif (i, j) in main.bad_school:
                         image[i, j] = to_rgb('gray')  # Gray for bad schools
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
                 continue  # Leave as white (empty)
             else:
                 agent = agents[grid[i, j]]
                 if color_based_on == 'race':
                     color = color_race.get(agent.race, 'grey')
                     rgb = to_rgb(color)
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
+
                 elif color_based_on == 'race_with_schools':
                     if (i, j) in main.good_school:
                         color = 'black'  # Black for good schools
@@ -146,30 +117,21 @@ def plot_grid(grid, agents, iteration, segregation, percentage_satisfied,pop_den
                     else:
                         color = color_race.get(agent.race, 'grey')
                     rgb = to_rgb(color)
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
                 elif color_based_on == 'income':
                     color = color_income.get(agent.starting_income_quartile, 'grey')
                     rgb = to_rgb(color)
                 elif color_based_on == 'income_intensity':
                     # Map income quartile to blue shade intensity
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+
                     income_level = agent.starting_income_quartile
                     rgb = cmap_income(norm(income_level))[:3]  # ignore alpha channel
-=======
-=======
->>>>>>> Stashed changes
+
                     income_level = encode_income_group(agent.starting_income_quartile)
                     
                     rgb = cmap_income(norm(income_level))[:3]  # ignore alpha channel
                 
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
                 image[i, j] = rgb
 
     ax.imshow(image)
