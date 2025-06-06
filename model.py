@@ -111,6 +111,7 @@ class Environment:
                 if self.grid[i, j] == 0:
                     self.open_spots.append((i, j))
         
+    @profile
     def get_neighbors(self, agent: Agent) -> list[Agent]:
         i, j = agent.pos
         neighbors = []
