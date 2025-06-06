@@ -1,0 +1,321 @@
+Timer unit: 1e-09 s
+
+Total time: 53.8014 s
+File: /Users/dom500d/Documents/extended-schelling-s-model/model.py
+Function: simulate at line 291
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   291                                           @profile
+   292                                           def simulate(height, width, population_density, race_income: PropertyGenerator, income_difference_threshold, tau_u, tau_s, max_iter=10000, segregation_type=RaceType(), break_early=True):
+   293                                               """Run the simulation for the extended Schelling model."""
+   294         1   21421000.0    2e+07      0.0      env = Environment(height, width, population_density, race_income, income_difference_threshold)
+   295         1       1000.0   1000.0      0.0      race_frames = []
+   296         1          0.0      0.0      0.0      income_frames = []
+   297         1          0.0      0.0      0.0      race_w_school_frames = []
+   298         1          0.0      0.0      0.0      iteration = 0
+   299         1          0.0      0.0      0.0      un_over_t = []
+   300         1          0.0      0.0      0.0      seg_over_t = []
+   301         1          0.0      0.0      0.0      money_increase = []
+   302         1          0.0      0.0      0.0      percentage_sat = 0
+   303         1       1000.0   1000.0      0.0      num_agents = int(height*width*population_density)
+   304         1          0.0      0.0      0.0      orig_tau_u = tau_u
+   305         1          0.0      0.0      0.0      orig_tau_s = tau_s
+   306                                               
+   307                                               
+   308                                               #relaxation_applied = False  # To ensure relaxation is only applied once unless you want to do it repeatedly
+   309                                           
+   310        11       6000.0    545.5      0.0      while iteration < max_iter:
+   311        11  123780000.0    1e+07      0.2          segregation = env.compute_segregation(segregation_type)
+   312        11       3000.0    272.7      0.0          seg_over_t.append(segregation)
+   313        11  373530000.0    3e+07      0.7          fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, percentage_sat,population_density,color_based_on='race' )
+   314        11     906000.0  82363.6      0.0          buf = io.BytesIO()
+   315        11  288958000.0    3e+07      0.5          fig.savefig(buf, format='png')
+   316        11       9000.0    818.2      0.0          buf.seek(0)
+   317        11   33823000.0    3e+06      0.1          img = Image.open(buf).convert("RGB")
+   318        11       6000.0    545.5      0.0          race_frames.append(img)
+   319        11    1262000.0 114727.3      0.0          plt.close(fig)
+   320                                                   
+   321        11 2375909000.0    2e+08      4.4          fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat,population_density, color_based_on='income_intensity' )
+   322        11      19000.0   1727.3      0.0          buf = io.BytesIO()
+   323        11  282109000.0    3e+07      0.5          fig.savefig(buf, format='png')
+   324        11       6000.0    545.5      0.0          buf.seek(0)
+   325        11   32942000.0    3e+06      0.1          img = Image.open(buf).convert("RGB")
+   326        11       4000.0    363.6      0.0          income_frames.append(img)
+   327        11    1187000.0 107909.1      0.0          plt.close(fig)
+   328                                           
+   329        11       7000.0    636.4      0.0          if main.relaxation_applied:
+   330         3   50283000.0    2e+07      0.1              fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, percentage_sat, color_based_on='race_with_schools')
+   331         3       4000.0   1333.3      0.0              buf = io.BytesIO()
+   332         3   74680000.0    2e+07      0.1              fig.savefig(buf, format='png')
+   333         3          0.0      0.0      0.0              buf.seek(0)
+   334         3    8984000.0    3e+06      0.0              img = Image.open(buf).convert("RGB")
+   335         3          0.0      0.0      0.0              race_w_school_frames.append(img)
+   336         3     296000.0  98666.7      0.0              plt.close(fig)
+   337                                           
+   338                                                   
+   339        11  695227000.0    6e+07      1.3          unsatisfied = env.get_unsatisfied_agents(tau_u, tau_s)
+   340        11       6000.0    545.5      0.0          un_over_t.append(len(unsatisfied))
+   341        11       1000.0     90.9      0.0          moved_any = False
+   342        11          0.0      0.0      0.0          if not unsatisfied:
+   343                                                       print("There are no unsatisfied agents.")
+   344                                                       break
+   345        11    1585000.0 144090.9      0.0          random.shuffle(unsatisfied)
+   346                                                   
+   347      2949     537000.0    182.1      0.0          for agent in unsatisfied:
+   348      2938        5e+10    2e+07     89.3              vacant = env.find_vacant_spot(agent, tau_u, tau_s)
+   349      2938     375000.0    127.6      0.0              if vacant is not None:
+   350      1469    1053000.0    716.8      0.0                  env.move_agent(agent, vacant)
+   351      1469     179000.0    121.9      0.0                  moved_any = True
+   352                                           
+   353        11       2000.0    181.8      0.0          if not moved_any:
+   354         2       1000.0    500.0      0.0              if not main.relaxation_applied and break_early:
+   355         1     251000.0 251000.0      0.0                  all_positions = [(i, j) for i in range(main.L) for j in range(main.W)]
+   356         3       2000.0    666.7      0.0                  for i in range((main.L * main.W)//1000):
+   357         2      20000.0  10000.0      0.0                      agent_positions = random.sample(all_positions, 1) 
+   358         2          0.0      0.0      0.0                      main.good_school.append(agent_positions[0])  
+   359                                                               #print(f"good school:{agent_positions[0]}")
+   360                                                               
+   361         2       4000.0   2000.0      0.0                      agent_positions = random.sample(all_positions, 1) 
+   362         2       1000.0    500.0      0.0                      main.bad_school.append(agent_positions[0])  
+   363                                                               #print(f"bad school:{agent_positions[0]}")
+   364                                                               
+   365         1      30000.0  30000.0      0.0                  main.good_school_zone = get_school_range(main.good_school)
+   366         1      25000.0  25000.0      0.0                  main.bad_school_zone = get_school_range(main.bad_school)
+   367                                           
+   368         1      23000.0  23000.0      0.0                  print("No moves possible, increasing da money and lowering the thresholds.")
+   369         1          0.0      0.0      0.0                  money_increase.append(iteration)
+   370                                           
+   371                                                           # Relax constraints
+   372                                           
+   373         1          0.0      0.0      0.0                  env.income_difference_threshold = env.income_difference_threshold + 3
+   374                                           
+   375         1          0.0      0.0      0.0                  tau_u = tau_u - 0.3  # Decrease satisfaction threshold
+   376         1          0.0      0.0      0.0                  tau_s = tau_s - 0.3
+   377         1          0.0      0.0      0.0                  main.relaxation_applied = True
+   378                                           
+   379                                           
+   380                                                           # Continue from the current state
+   381         1       1000.0   1000.0      0.0                  continue
+   382                                           
+   383         1          0.0      0.0      0.0              elif break_early:
+   384         1      16000.0  16000.0      0.0                  print("No movement and relaxation already applied, breaking.")
+   385         1          0.0      0.0      0.0                  break
+   386                                                       else:
+   387                                                           print("No movement, increasing income threshold.")
+   388                                                           #env.income_difference_threshold += 1
+   389                                                           money_increase.append(iteration)
+   390         9       4000.0    444.4      0.0          percentage_sat = (num_agents-len(unsatisfied))/num_agents
+   391         9          0.0      0.0      0.0          iteration += 1
+   392                                               
+   393         1   65415000.0    7e+07      0.1      unsatisfied = env.get_unsatisfied_agents(tau_u, tau_s)
+   394         1          0.0      0.0      0.0      un_over_t.append(len(unsatisfied))
+   395         1       1000.0   1000.0      0.0      percentage_sat = (num_agents-len(unsatisfied))/num_agents #Calculate final satisfaction
+   396                                           
+   397                                               
+   398                                           
+   399         1   11524000.0    1e+07      0.0      segregation = env.compute_segregation(segregation_type)
+   400         1       1000.0   1000.0      0.0      seg_over_t.append(segregation)
+   401         1   52633000.0    5e+07      0.1      fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat,population_density, color_based_on='race')
+   402         1       2000.0   2000.0      0.0      buf = io.BytesIO()
+   403         1   22998000.0    2e+07      0.0      fig.savefig(buf, format='png')
+   404         1          0.0      0.0      0.0      buf.seek(0)
+   405         1    2798000.0    3e+06      0.0      img = Image.open(buf).convert("RGB")
+   406         1          0.0      0.0      0.0      race_frames.append(img)
+   407         1      96000.0  96000.0      0.0      plt.close(fig)
+   408         1      33000.0  33000.0      0.0      timestamp = datetime.now().strftime("%m%d_%H%M")
+   409         2  364204000.0    2e+08      0.7      race_frames[0].save(
+   410         1       4000.0   4000.0      0.0          f"./simulation_results/model_race_{height}_{width}_{population_density}_{income_difference_threshold}_{orig_tau_u}_{orig_tau_s}_{timestamp}.gif",        # Output filename
+   411         1          0.0      0.0      0.0          format='GIF',
+   412         1          0.0      0.0      0.0          save_all=True,
+   413         1       1000.0   1000.0      0.0          append_images=race_frames[1:],
+   414         1          0.0      0.0      0.0          duration=300,           # Duration per frame in ms
+   415                                               )
+   416                                               
+   417         1  212199000.0    2e+08      0.4      fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation,percentage_sat,population_density, color_based_on='income_intensity')
+   418         1       2000.0   2000.0      0.0      buf = io.BytesIO()
+   419         1   24909000.0    2e+07      0.0      fig.savefig(buf, format='png')
+   420         1          0.0      0.0      0.0      buf.seek(0)
+   421         1    2836000.0    3e+06      0.0      img = Image.open(buf).convert("RGB")
+   422         1          0.0      0.0      0.0      income_frames.append(img)
+   423         1     110000.0 110000.0      0.0      plt.close(fig)
+   424         1      16000.0  16000.0      0.0      timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+   425         2  350559000.0    2e+08      0.7      income_frames[0].save(
+   426         1       3000.0   3000.0      0.0          f"./simulation_results/model_income_{height}_{width}_{population_density}_{income_difference_threshold}_{orig_tau_u}_{orig_tau_s}_{timestamp}.gif",        # Output filename
+   427         1       1000.0   1000.0      0.0          format='GIF',
+   428         1          0.0      0.0      0.0          save_all=True,
+   429         1          0.0      0.0      0.0          append_images=income_frames[1:],
+   430         1          0.0      0.0      0.0          duration=300,           # Duration per frame in ms
+   431                                               )
+   432                                           
+   433         1   16467000.0    2e+07      0.0      fig = grid_setting.plot_grid(env.grid, env.agents, iteration, segregation, percentage_sat, color_based_on='race_with_schools')
+   434         1       2000.0   2000.0      0.0      buf = io.BytesIO()
+   435         1   25039000.0    3e+07      0.0      fig.savefig(buf, format='png')
+   436         1          0.0      0.0      0.0      buf.seek(0)
+   437         1    3034000.0    3e+06      0.0      img = Image.open(buf).convert("RGB")
+   438         1          0.0      0.0      0.0      race_w_school_frames.append(img)
+   439         1      99000.0  99000.0      0.0      plt.close(fig)
+   440         1      15000.0  15000.0      0.0      timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+   441         2  117052000.0    6e+07      0.2      race_w_school_frames[0].save(
+   442         1       4000.0   4000.0      0.0          f"./simulation_results/model_race_with_schools_{height}_{width}_{population_density}_{income_difference_threshold}_{orig_tau_u}_{orig_tau_s}_{timestamp}.gif",        # Output filename
+   443         1          0.0      0.0      0.0          format='GIF',
+   444         1          0.0      0.0      0.0          save_all=True,
+   445         1          0.0      0.0      0.0          append_images=race_w_school_frames[1:],
+   446         1          0.0      0.0      0.0          duration=300,           # Duration per frame in ms
+   447                                               )
+   448                                           
+   449                                           
+   450         1   14854000.0    1e+07      0.0      fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(10, 10), sharex=True)
+   451                                               # --- Plot 1: Unsatisfied Agents Over Time ---
+   452         1       1000.0   1000.0      0.0      iteration = list(range(len(un_over_t)))
+   453         1     262000.0 262000.0      0.0      axs[0].plot(iteration, un_over_t, label="Unsatisfied Agents", color="blue")
+   454         2          0.0      0.0      0.0      for i in money_increase:
+   455         1       1000.0   1000.0      0.0          if i < len(un_over_t):
+   456         1    1235000.0    1e+06      0.0              axs[0].scatter(i, un_over_t[i], color='red', zorder=5, label='Income Threshold Increased' if i == money_increase[0] else "")
+   457                                           
+   458         1      28000.0  28000.0      0.0      axs[0].set_ylabel("Unsatisfied Count")
+   459         1      86000.0  86000.0      0.0      axs[0].set_title("# of Unsatisfied Agents Over Iterations")
+   460         1     902000.0 902000.0      0.0      axs[0].legend()
+   461         1     115000.0 115000.0      0.0      axs[0].grid(True)
+   462                                           
+   463                                               # Plottinv
+   464         1     210000.0 210000.0      0.0      axs[1].plot(iteration, seg_over_t, color='green', label="Homophilly")
+   465                                           
+   466         2          0.0      0.0      0.0      for i in money_increase:
+   467         1          0.0      0.0      0.0          if i < len(seg_over_t):
+   468         1    1022000.0    1e+06      0.0              axs[1].scatter(i, seg_over_t[i], color='red', zorder=5)
+   469                                           
+   470         1      25000.0  25000.0      0.0      axs[1].set_xlabel("Iteration")
+   471         1      21000.0  21000.0      0.0      axs[1].set_ylabel("Homophilly")
+   472         1      83000.0  83000.0      0.0      axs[1].set_title("Homophilly Over Iterations")
+   473         1     604000.0 604000.0      0.0      axs[1].legend()
+   474         1     114000.0 114000.0      0.0      axs[1].grid(True)
+   475                                           
+   476         1   71380000.0    7e+07      0.1      plt.savefig(f"./simulation_results/unsatisfied_over_t_{height}_{width}_{population_density}_{income_difference_threshold}_{orig_tau_u}_{orig_tau_s}_{timestamp}.png") 
+   477         1          0.0      0.0      0.0      return un_over_t
+
+Total time: 53.8064 s
+File: /Users/dom500d/Documents/extended-schelling-s-model/main.py
+Function: main at line 17
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    17                                           @profile
+    18                                           def main():
+    19                                               #### variable setting 
+    20                                               # Grid and simulation parameters
+    21                                                 
+    22         1          0.0      0.0      0.0      POP_DENSITY = 0.7  # 80% population density
+    23         1          0.0      0.0      0.0      MAX_ITER_2 = 1000  # Max iterations for 2-attribute model
+    24         1          0.0      0.0      0.0      MAX_ITER_3 = 2000  # Max iterations for 3-attribute model
+    25         1          0.0      0.0      0.0      TAU_U = 0.50  # Utility threshold (50%)
+    26         1          0.0      0.0      0.0      TAU_S_2 = 0.5 # Similarity threshold for 2-attribute (25%)
+    27         1          0.0      0.0      0.0      TAU_S_3 = 0.5   # Similarity threshold for 3-attribute (50%)
+    28         1          0.0      0.0      0.0      income_threshold = 0
+    29                                               
+    30                                           ### simulation
+    31                                               # random.seed(42)  # For reproducibility
+    32                                               # # Run 2-attribute model
+    33                                               # print("Running 2-attribute model...")
+    34                                               # iter_2, seg_2 = simulate(2, TAU_U, TAU_S_2, MAX_ITER_2,NUM_AGENTS)
+    35                                               # print(f"2-attribute model converged in {iter_2} iterations with segregation level {seg_2}")
+    36                                               
+    37                                               # # Run 3-attribute model
+    38                                               # print("Running 3-attribute model...")
+    39                                               # iter_3, seg_3 = simulate(3, TAU_U, TAU_S_3, MAX_ITER_3,NUM_AGENTS)
+    40                                               # print(f"3-attribute model converged in {iter_3} iterations with segregation level {seg_3}")
+    41         1       1000.0   1000.0      0.0      income = IncomeGenerator([0.25, 0.25, 0.25, 0.25])
+    42         1       1000.0   1000.0      0.0      race = RaceGenerator([0.25, 0.25, 0.25, 0.25])
+    43                                           
+    44         1       7000.0   7000.0      0.0      approx_pdf_values_hispanics = np.array([
+    45                                                   0.5, 2.2, 4.8, 5.3, 5, 4.9, 4.0, 3.2,
+    46                                                   2.5, 2.0, 1.5, 1.2, 1.0, 0.8, 0.6, 0.5,
+    47                                                   0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1, 0.08,
+    48                                                   0.06, 0.05, 0.04, 0.03, 0.02, 0.01, 0.6  # last spike at 200k
+    49                                               ])
+    50                                           
+    51                                           
+    52         1          0.0      0.0      0.0      approx_pdf_values_black = np.array([
+    53                                                   0.4, 1.5, 3.2, 4.8, 5.2, 5.0, 4.6, 3.9,
+    54                                                   3.0, 2.4, 1.8, 1.4, 1.1, 0.9, 0.7, 0.6,
+    55                                                   0.5, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.12,
+    56                                                   0.1, 0.08, 0.06, 0.04, 0.02, 0.01, 0.6  # spike at 200k
+    57                                               ])
+    58                                           
+    59         1       1000.0   1000.0      0.0      approx_pdf_values_asian = np.array([
+    60                                                   0.9, 2.0, 2.8, 3.0, 2.9, 2.8, 2.7, 2.6,
+    61                                                   2.4, 2.3, 2.1, 1.9, 1.6, 1.3, 1.1, 0.9,
+    62                                                   0.75, 0.66, 0.52, 0.45, 0.4, 0.36, 0.3, 0.24,
+    63                                                   0.2, 0.15, 0.11, 0.08, 0.06, 0.05, 5  # spike at 200k
+    64                                               ])
+    65         1       1000.0   1000.0      0.0      approx_pdf_values_white = np.array([
+    66                                                   0.5, 1.2, 2.5, 3.2, 3.8, 4.0, 4.1, 4.0,
+    67                                                   3.9, 3.7, 3.4, 3.0, 2.5, 2.1, 1.7, 1.3,
+    68                                                   1.0, 0.8, 0.6, 0.5, 0.4, 0.35, 0.3, 0.25,
+    69                                                   0.2, 0.15, 0.1, 0.08, 0.06, 0.04, 2.5  # spike at 200k
+    70                                               ])
+    71                                           
+    72         1      36000.0  36000.0      0.0      income_bins = np.linspace(0, 200000, len(approx_pdf_values_hispanics))
+    73                                           
+    74                                               # Normalize to form a valid PDF
+    75         1      16000.0  16000.0      0.0      pdf_values_hispanics = approx_pdf_values_hispanics /np.sum(approx_pdf_values_hispanics)
+    76         1       4000.0   4000.0      0.0      pdf_values_black = approx_pdf_values_black /np.sum(approx_pdf_values_black)
+    77         1       3000.0   3000.0      0.0      pdf_values_asian = approx_pdf_values_asian /np.sum(approx_pdf_values_asian)
+    78         1       2000.0   2000.0      0.0      pdf_values_white = approx_pdf_values_white /np.sum(approx_pdf_values_white)
+    79                                           
+    80         1       1000.0   1000.0      0.0      '''
+    81                                               white = 0
+    82                                               black = 1
+    83                                               asian = 2
+    84                                               hispanic = 3
+    85                                               '''
+    86                                           
+    87         1          0.0      0.0      0.0      '''san_diego = {0: [0.15, 0.15, 0.16, 0.19, 0.22],
+    88                                                       1: [0.22, 0.24, 0.23, 0.17, 0.14],
+    89                                                       2: [0.13, 0.13, 0.14, 0.19, 0.24],
+    90                                                       3: [0.25, 0.25, 0.20, 0.18, 0.16]}'''
+    91                                               
+    92                                               
+    93                                               
+    94                                               # maybe take the most unsatisfied people and then add some money or something to see if they can move.
+    95                                               # get the number of unsatisified agents over time
+    96                                           
+    97         1       1000.0   1000.0      0.0      san_diego = {
+    98         1          0.0      0.0      0.0          0: pdf_values_white,
+    99         1          0.0      0.0      0.0          1: pdf_values_black,
+   100         1          0.0      0.0      0.0          2: pdf_values_asian,
+   101         1          0.0      0.0      0.0          3: pdf_values_hispanics
+   102                                               }
+   103                                               # san_diego = {0: [0.15, 0.15, 0.16, 0.19, 0.22],
+   104                                               #         1: [0.22, 0.24, 0.23, 0.17, 0.14],
+   105                                               #         2: [0.13, 0.13, 0.14, 0.19, 0.24],
+   106                                               #         3: [0.25, 0.25, 0.20, 0.18, 0.16]}
+   107                                           
+   108                                               #Gaussian distribution
+   109         1          0.0      0.0      0.0      '''san_diego = {
+   110                                                   0: {'mu': 2.5, 'sigma': 1.5, 'min': 0, 'max': 5},  # White: N(2.5, 1.5)
+   111                                                   1: {'mu': 1.5, 'sigma': 1.5, 'min': 0, 'max': 5},  # Black: N(1.5, 1.5)
+   112                                                   2: {'mu': 3.0, 'sigma': 1.5, 'min': 0, 'max': 5},  # Asian: N(3.0, 1.5)
+   113                                                   3: {'mu': 1.0, 'sigma': 1.5, 'min': 0, 'max': 5}   # Hispanic: N(1.0, 1.5)
+   114                                               }'''
+   115                                           
+   116         1          0.0      0.0      0.0      '''for i in range(0,len(POP_DENSITY)):
+   117                                                   relaxation_applied = False
+   118                                                   good_school = []
+   119                                                   bad_school = []
+   120                                                   good_school_zone = []
+   121                                                   bad_school_zone = []
+   122                                                   TAU_U = 0.50  # Utility threshold (50%)
+   123                                                   TAU_S_2 = 0.5 # Similarity threshold for 2-attribute (25%)
+   124                                                   income_threshold = 0
+   125                                                   thing = Property_Gaussian_Generator(san_diego, race_gen=race)
+   126                                                   thing = PropertyGenerator(san_diego, race_gen=race)
+   127                                                   NUM_AGENTS = int(L * W * POP_DENSITY[i])
+   128                                                   un_over_t = simulate(L, W, POP_DENSITY[i], thing, income_threshold, TAU_U, TAU_S_2)'''
+   129                                               #thing = Property_Gaussian_Generator(san_diego, race_gen=race)
+   130         1       2000.0   2000.0      0.0      thing = PropertyGenerator(san_diego, race_gen=race)
+   131         1       1000.0   1000.0      0.0      NUM_AGENTS = int(L * W * POP_DENSITY)
+   132         1        5e+10    5e+10    100.0      un_over_t = simulate(L, W, POP_DENSITY, thing, income_threshold, TAU_U, TAU_S_2)
+
+ 53.80 seconds - /Users/dom500d/Documents/extended-schelling-s-model/model.py:291 - simulate
+ 53.81 seconds - /Users/dom500d/Documents/extended-schelling-s-model/main.py:17 - main
