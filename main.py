@@ -4,22 +4,22 @@ from scipy.spatial.distance import hamming
 import random
 import grid_setting
 from scipy.stats import lognorm
-from line_profiler import profile
+#from line_profiler import profile
 
 
 from model import simulate, IncomeGenerator, RaceGenerator, PropertyGenerator
-L, W = 125, 125 # Grid size
+L, W = 200, 200 # Grid size
 good_school = []
 bad_school = []
 good_school_zone = []
 bad_school_zone = []
 relaxation_applied = False
-@profile
+#@profile
 def main():
     #### variable setting 
     # Grid and simulation parameters
       
-    POP_DENSITY = 0.7  # 80% population density
+    POP_DENSITY = 0.8  # 80% population density
     MAX_ITER_2 = 1000  # Max iterations for 2-attribute model
     MAX_ITER_3 = 2000  # Max iterations for 3-attribute model
     TAU_U = 0.50  # Utility threshold (50%)

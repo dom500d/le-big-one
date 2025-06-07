@@ -11,7 +11,7 @@ from datetime import datetime
 from scipy.stats import truncnorm
 import math
 
-from line_profiler import profile
+#from line_profiler import profile
 
 class RaceType:
     pass
@@ -111,7 +111,7 @@ class Environment:
                 if self.grid[i, j] == 0:
                     self.open_spots.append((i, j))
         
-    @profile
+    #@profile
     def get_neighbors(self, agent: Agent) -> list[Agent]:
         i, j = agent.pos
         neighbors = []
@@ -125,12 +125,12 @@ class Environment:
                     neighbors.append(self.agents[id])
         return neighbors
     
-    @profile
+    #@profile
     def compute_similarity(self, attr1, attr2):
         """Compute similarity using Hamming distance."""
         return 1.0 if attr1 == attr2 else 0.0
 
-    @profile
+    #@profile
     def is_satisfied(self, agent: Agent, neighbors: list[Agent], tau_u, tau_s):
         """Check if agent is satisfied based on utility and similarity thresholds."""
         if not neighbors:
@@ -141,7 +141,7 @@ class Environment:
                 similar_neighbors += 1
         theta = similar_neighbors / len(neighbors)
 
-        return theta >= tau_u
+        #return theta >= tau_u
     
 
 
@@ -201,7 +201,7 @@ class Environment:
             raise(TypeError("This type of segregation isn't supported."))'''
         
         return segregation
-    @profile
+    #@profile
     def find_vacant_spot(self, agent: Agent, tau_u, tau_s):
         """Find nearest vacant spot where agent would be satisfied."""
         i, j = agent.pos
@@ -291,7 +291,7 @@ def get_school_range(school_positions):
                     range_set.add((nx, ny))
     return range_set
 
-@profile
+#@profile
 def simulate(height, width, population_density, race_income: PropertyGenerator, income_difference_threshold, tau_u, tau_s, max_iter=10000, segregation_type=RaceType(), break_early=True):
     """Run the simulation for the extended Schelling model."""
     env = Environment(height, width, population_density, race_income, income_difference_threshold)
